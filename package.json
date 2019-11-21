@@ -1,0 +1,34 @@
+{
+  "name": "@molecule-driver/fixed-landmark",
+  "version": "1.0.0",
+  "description": "A library for fixing elements to a container within a container.",
+  "main": "index.js",
+  "scripts": {
+    "babelify": "babel src -d dist",
+    "minify": "node minify"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GasparErrobidart/fixed-landmark.git"
+  },
+  "keywords": [
+    "fixed",
+    "element",
+    "js",
+    "browser",
+    "scrollspy",
+    "scroll"
+  ],
+  "author": "Gaspar G. Errobidart",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/GasparErrobidart/fixed-landmark/issues"
+  },
+  "devDependencies": {
+    "minify": "^4.1.3",
+    "minimist": "^1.2.0",
+    "webpack-cli": "^3.3.6",
+    "babel-cli": "^6.0.0"
+  },
+  "homepage": "https://github.com/GasparErrobidart/fixed-landmark#readme"
+}

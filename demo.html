@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <style>
+    html,body{
+      padding:0;
+      margin:0;
+      font-family:sans-serif;
+    }
+    .container{
+      height:200vh;
+      box-sizing:border-box;
+      margin:100px 200px;
+      background:#ddd;
+    }
+    .make-this-fixed{
+      background: #666;
+      display: table;
+      width: 100%;
+    }
+    h1{
+      text-align: center;
+      color:#fff;
+      font-size: 28px;
+      /* transition: font-size 500ms ease-in-out; */
+    }
+    .scroll-direction-down .fixed-element-active h1{
+      /* font-size: 14px */
+    }
+
+    img{
+      width: 100%;
+    }
+    nav{
+      width:100%;
+      padding: 20px 0;
+      background: #333;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container" id="container-1">
+    <div class="make-this-fixed" id="fixed-element-1">
+      <h1>Fixed element</h1>
+    </div>
+    <img src="https://tecnovortex.com/wp-content/uploads/2019/04/wallpaper-engine.jpg" alt="">
+  </div>
+  <nav>
+    <h1>NAVBAR</h1>
+  </nav>
+  <div class="container" id="container-2">
+    <div class="make-this-fixed" id="fixed-element-2">
+      <h1>Fixed element</h1>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="make-this-fixed" >
+      <h1>Not Fixed</h1>
+    </div>
+  </div>
+
+  <script src="src/fixed-landmark.js"></script>
+  <script src="../scroll-direction/src/scroll-direction.js"></script>
+  <script>
+
+    window.addEventListener("load",function(){
+      new ScrollDirection({
+        target : window
+      });
+
+      new FixedElement({
+        element   : "#fixed-element-1",
+        container : "#container-1"
+        // offsetValue : 40
+      });
+
+      new FixedElement({
+        element   : 'nav',
+        container : 'body'
+      });
+
+      new FixedElement({
+        element   : document.querySelector("#fixed-element-2"),
+        container : document.querySelector("#container-2"),
+        offsetElement : 'nav'
+      });
+
+    });
+  </script>
+</body>
+</html>

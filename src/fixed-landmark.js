@@ -27,12 +27,22 @@ class Landmark extends Box{
     this.target = target
     this.parent = target.dom.parentNode
     this.update()
+    this.dom.classList.add('fixed-landmark')
     this.parent.insertBefore(this.dom, this.target.dom)
+    this.isEnabled = false
     this.display(false)
   }
 
   display(value){
-    const height = this.target.rect().height
+    const height          = this.target.rect().height
+    this.isEnabled        = value
+    if(this.isEnabled){
+      this.dom.classList.add('fixed-landmark-active')
+      this.dom.classList.remove('fixed-landmark-inactive')
+    }else{
+      this.dom.classList.add('fixed-landmark-inactive')
+      this.dom.classList.remove('fixed-landmark-active')
+    }
     this.dom.style.height = value ? height+'px' : '0px'
   }
 
@@ -149,7 +159,6 @@ class FixedElement extends Box{
     this.left += 'px'
     this.landmark.display(isFixed)
     this.fix(isFixed)
-
   }
 
 

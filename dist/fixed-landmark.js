@@ -48,7 +48,9 @@ var Landmark = function (_Box) {
     _this.target = target;
     _this.parent = target.dom.parentNode;
     _this.update();
+    _this.dom.classList.add('fixed-landmark');
     _this.parent.insertBefore(_this.dom, _this.target.dom);
+    _this.isEnabled = false;
     _this.display(false);
     return _this;
   }
@@ -56,7 +58,16 @@ var Landmark = function (_Box) {
   _createClass(Landmark, [{
     key: "display",
     value: function display(value) {
-      this.dom.style.height = value ? this.target.rect().height + 'px' : '0px';
+      var height = this.target.rect().height;
+      this.isEnabled = value;
+      if (this.isEnabled) {
+        this.dom.classList.add('fixed-landmark-active');
+        this.dom.classList.remove('fixed-landmark-inactive');
+      } else {
+        this.dom.classList.add('fixed-landmark-inactive');
+        this.dom.classList.remove('fixed-landmark-active');
+      }
+      this.dom.style.height = value ? height + 'px' : '0px';
     }
   }, {
     key: "update",
@@ -107,6 +118,7 @@ var FixedElement = function (_Box3) {
     _this4.offsetFunction = offsetFunction;
     _this4.isFixed = false;
     _this4.defaultPosition = _this4.position();
+    _this4.defaultWidth = _this4.styles().defaultWidth;
     _this4.defaultPositionMargins = {
       top: _this4.styles().top,
       right: _this4.styles().right,
@@ -114,11 +126,20 @@ var FixedElement = function (_Box3) {
       left: _this4.styles().left
     };
     window.addEventListener('scroll', _this4.update.bind(_this4));
-    console.log(_this4);
+    window.addEventListener('resize', function () {
+      _this4.reset();
+      _this4.update();
+    });
+    _this4.update();
     return _this4;
   }
 
   _createClass(FixedElement, [{
+    key: "reset",
+    value: function reset() {
+      this.dom.removeAttribute('style');
+    }
+  }, {
     key: "offset",
     value: function offset() {
       var offset = this.offsetValue || 0;
@@ -152,29 +173,37 @@ var FixedElement = function (_Box3) {
   }, {
     key: "fix",
     value: function fix(value) {
-      if (this.isFixed != value) {
-        this.isFixed = value;
-        if (this.isFixed) {
-          this.position('fixed');
-          this.positionMargins(this);
-          this.dom.classList.remove("fixed-element-inactive");
-          this.dom.classList.add("fixed-element-active");
-        } else {
-          this.position(this.defaultPosition);
-          this.positionMargins(this.defaultPositionMargins);
-          this.dom.classList.remove("fixed-element-active");
-          this.dom.classList.add("fixed-element-inactive");
-        }
+      this.isFixed = value;
+      if (this.isFixed) {
+        this.dom.style.width = this.dom.offsetWidth + 'px';
+        this.position('fixed');
+        this.positionMargins(this);
+        this.dom.classList.remove("fixed-element-inactive");
+        this.dom.classList.add("fixed-element-active");
+      } else {
+        this.position(this.defaultPosition);
+        this.positionMargins(this.defaultPositionMargins);
+        this.dom.style.width = this.defaultWidth;
+        this.dom.classList.remove("fixed-element-active");
+        this.dom.classList.add("fixed-element-inactive");
       }
     }
   }, {
     key: "update",
     value: function update(ev) {
       var rect = this.rect();
+      var landmarkR = this.landmark.rect();
+      var containerR = this.container.rect();
       var offset = this.offset();
-      var isFixed = this.landmark.rect().top <= 0 + offset;
-      this.top = this.offset() + "px";
-      this.landmark.display(isFixed);
+      var isFixed = landmarkR.top <= 0 + offset;
+      this.top = offset;
+      this.left = containerR.left;
+      if (containerR.bottom <= rect.height + offset) {
+        this.top += containerR.bottom - rect.height - offset;
+      }
+      this.top += 'px';
+      this.left += 'px';
+      if (this.landmark.isEnabled != isFixed) this.landmark.display(isFixed);
       this.fix(isFixed);
     }
   }]);

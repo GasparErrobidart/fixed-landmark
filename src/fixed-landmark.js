@@ -157,7 +157,7 @@ class FixedElement extends Box{
     }
     this.top  += 'px'
     this.left += 'px'
-    this.landmark.display(isFixed)
+    if(this.landmark.isEnabled != isFixed) this.landmark.display(isFixed)
     this.fix(isFixed)
   }
 

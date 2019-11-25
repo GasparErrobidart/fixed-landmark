@@ -33,10 +33,10 @@
       text-align: center;
       color:#fff;
       font-size: 28px;
-      /* transition: font-size 500ms ease-in-out; */
+      transition: font-size 500ms ease-in-out;
     }
     .scroll-direction-down .fixed-element-active h1{
-      /* font-size: 14px */
+      font-size: 14px
     }
 
     img{
@@ -78,9 +78,9 @@
   <script>
 
     window.addEventListener("load",function(){
-      // new ScrollDirection({
-      //   target : window
-      // });
+      new ScrollDirection({
+        target : window
+      });
 
       new FixedElement({
         element   : "#fixed-element-1",

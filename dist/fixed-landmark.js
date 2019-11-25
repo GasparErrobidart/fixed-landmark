@@ -20,73 +20,35 @@ var Box = function () {
       this.dom = element;
     }
     if (!this.dom) console.error("Element (" + element + ") wasn't found.");
+    this.rect();
+    this.styles();
   }
 
   _createClass(Box, [{
     key: "rect",
     value: function rect() {
-      return this.dom.getBoundingClientRect();
+      this.cachedRect = this.dom.getBoundingClientRect();
+      return this.cachedRect;
     }
   }, {
     key: "styles",
     value: function styles() {
-      return this.dom.currentStyle || window.getComputedStyle(this.dom);
+      this.cachedStyles = this.dom.currentStyle || window.getComputedStyle(this.dom);
+      return this.cachedStyles;
+    }
+  }, {
+    key: "inView",
+    value: function inView() {
+      var rect = this.rect();
+      return rect.bottom >= 0;
     }
   }]);
 
   return Box;
 }();
 
-var Landmark = function (_Box) {
-  _inherits(Landmark, _Box);
-
-  function Landmark(target) {
-    _classCallCheck(this, Landmark);
-
-    var _this = _possibleConstructorReturn(this, (Landmark.__proto__ || Object.getPrototypeOf(Landmark)).call(this, document.createElement('div')));
-
-    _this.target = target;
-    _this.parent = target.dom.parentNode;
-    _this.update();
-    _this.dom.classList.add('fixed-landmark');
-    _this.parent.insertBefore(_this.dom, _this.target.dom);
-    _this.isEnabled = false;
-    _this.display(false);
-    return _this;
-  }
-
-  _createClass(Landmark, [{
-    key: "display",
-    value: function display(value) {
-      var height = this.target.rect().height;
-      this.isEnabled = value;
-      if (this.isEnabled) {
-        this.dom.classList.add('fixed-landmark-active');
-        this.dom.classList.remove('fixed-landmark-inactive');
-      } else {
-        this.dom.classList.add('fixed-landmark-inactive');
-        this.dom.classList.remove('fixed-landmark-active');
-      }
-      this.dom.style.height = value ? height + 'px' : '0px';
-    }
-  }, {
-    key: "update",
-    value: function update() {
-      var _this2 = this;
-
-      this.dom.style.width = this.target.rect().width + "px";
-      this.dom.style.height = this.target.rect().height + "px";
-      ['marginTop', 'marginBottom', 'marginLeft', 'marginRight'].forEach(function (attr) {
-        return _this2.dom.style[attr] = _this2.target.dom.style[attr];
-      });
-    }
-  }]);
-
-  return Landmark;
-}(Box);
-
-var Container = function (_Box2) {
-  _inherits(Container, _Box2);
+var Container = function (_Box) {
+  _inherits(Container, _Box);
 
   function Container(element) {
     _classCallCheck(this, Container);
@@ -97,8 +59,8 @@ var Container = function (_Box2) {
   return Container;
 }(Box);
 
-var FixedElement = function (_Box3) {
-  _inherits(FixedElement, _Box3);
+var FixedElement = function (_Box2) {
+  _inherits(FixedElement, _Box2);
 
   function FixedElement(options) {
     _classCallCheck(this, FixedElement);
@@ -109,35 +71,65 @@ var FixedElement = function (_Box3) {
         offsetElement = options.offsetElement,
         offsetFunction = options.offsetFunction;
 
-    var _this4 = _possibleConstructorReturn(this, (FixedElement.__proto__ || Object.getPrototypeOf(FixedElement)).call(this, element));
+    var _this2 = _possibleConstructorReturn(this, (FixedElement.__proto__ || Object.getPrototypeOf(FixedElement)).call(this, element));
 
-    _this4.container = new Container(container);
-    _this4.landmark = new Landmark(_this4);
-    _this4.offsetValue = offsetValue || 0;
-    _this4.offsetElement = offsetElement;
-    _this4.offsetFunction = offsetFunction;
-    _this4.isFixed = false;
-    _this4.defaultPosition = _this4.position();
-    _this4.defaultWidth = _this4.styles().defaultWidth;
-    _this4.defaultPositionMargins = {
-      top: _this4.styles().top,
-      right: _this4.styles().right,
-      bottom: _this4.styles().bottom,
-      left: _this4.styles().left
+    _this2.container = new Container(container);
+    _this2.landmark = new Landmark(_this2);
+    _this2.offsetValue = offsetValue || 0;
+    _this2.offsetElement = offsetElement;
+    _this2.offsetFunction = offsetFunction;
+    _this2.isFixed = false;
+    _this2.defaultPosition = _this2.position();
+    _this2.defaultWidth = _this2.styles().defaultWidth;
+    _this2.defaultPositionMargins = {
+      top: _this2.styles().top,
+      right: _this2.styles().right,
+      bottom: _this2.styles().bottom,
+      left: _this2.styles().left
     };
-    window.addEventListener('scroll', _this4.update.bind(_this4));
-    window.addEventListener('resize', function () {
-      _this4.reset();
-      _this4.update();
-    });
-    _this4.update();
-    return _this4;
+    _this2.watchScroll();
+    _this2.watchResize();
+    _this2.update();
+    return _this2;
   }
 
   _createClass(FixedElement, [{
+    key: "watchResize",
+    value: function watchResize() {
+      this.resizeListener = window.addEventListener('resize', this.reset.bind(this));
+    }
+  }, {
+    key: "stopWatchResize",
+    value: function stopWatchResize() {
+      window.removeEventListener('resize', this.resizeListener);
+    }
+  }, {
+    key: "watchScroll",
+    value: function watchScroll() {
+      var _this3 = this;
+
+      var limiter = void 0,
+          limitCount = 0;
+      this.scrollListener = window.addEventListener('scroll', function () {
+        if (limitCount < 10) clearTimeout(limiter);
+        limitCount++;
+        limiter = setTimeout(function () {
+          _this3.update();
+          limitCount = 0;
+        }, 5);
+      });
+    }
+  }, {
+    key: "stopWatchScroll",
+    value: function stopWatchScroll() {
+      window.removeEventListener('scroll', this.scrollListener);
+    }
+  }, {
     key: "reset",
     value: function reset() {
       this.dom.removeAttribute('style');
+      this.update();
+      this.landmark.update();
     }
   }, {
     key: "offset",
@@ -162,12 +154,12 @@ var FixedElement = function (_Box3) {
   }, {
     key: "positionMargins",
     value: function positionMargins() {
-      var _this5 = this;
+      var _this4 = this;
 
       var values = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
       ['top', 'right', 'bottom', 'left'].forEach(function (attr) {
-        return _this5.dom.style[attr] = values[attr] || 'auto';
+        return _this4.dom.style[attr] = values[attr] || 'auto';
       });
     }
   }, {
@@ -178,15 +170,28 @@ var FixedElement = function (_Box3) {
         this.dom.style.width = this.dom.offsetWidth + 'px';
         this.position('fixed');
         this.positionMargins(this);
-        this.dom.classList.remove("fixed-element-inactive");
-        this.dom.classList.add("fixed-element-active");
       } else {
         this.position(this.defaultPosition);
         this.positionMargins(this.defaultPositionMargins);
         this.dom.style.width = this.defaultWidth;
-        this.dom.classList.remove("fixed-element-active");
-        this.dom.classList.add("fixed-element-inactive");
       }
+    }
+  }, {
+    key: "addClasses",
+    value: function addClasses() {
+      var _this5 = this;
+
+      var limiter = void 0;
+      clearTimeout(limiter);
+      limiter = setTimeout(function () {
+        if (_this5.isFixed) {
+          _this5.dom.classList.remove("fixed-element-inactive");
+          _this5.dom.classList.add("fixed-element-active");
+        } else {
+          _this5.dom.classList.remove("fixed-element-active");
+          _this5.dom.classList.add("fixed-element-inactive");
+        }
+      }, 5);
     }
   }, {
     key: "update",
@@ -203,10 +208,62 @@ var FixedElement = function (_Box3) {
       }
       this.top += 'px';
       this.left += 'px';
-      if (this.landmark.isEnabled != isFixed) this.landmark.display(isFixed);
+      if (this.landmark.isEnabled != isFixed) {
+        this.landmark.display(isFixed);
+        this.addClasses();
+      }
       this.fix(isFixed);
     }
   }]);
 
   return FixedElement;
+}(Box);
+
+var Landmark = function (_Box3) {
+  _inherits(Landmark, _Box3);
+
+  function Landmark(target) {
+    _classCallCheck(this, Landmark);
+
+    var _this6 = _possibleConstructorReturn(this, (Landmark.__proto__ || Object.getPrototypeOf(Landmark)).call(this, document.createElement('div')));
+
+    _this6.target = target;
+    _this6.parent = target.dom.parentNode;
+    _this6.update();
+    _this6.dom.classList.add('fixed-landmark');
+    _this6.parent.insertBefore(_this6.dom, _this6.target.dom);
+    _this6.isEnabled = false;
+    _this6.display(false);
+    return _this6;
+  }
+
+  _createClass(Landmark, [{
+    key: "display",
+    value: function display(value) {
+      // const height          = this.target.rect().height
+      this.isEnabled = value;
+      // this.dom.style.height = value ? height+'px' : '0px'
+      this.dom.style.position = value ? 'relative' : 'absolute';
+      // if(this.isEnabled){
+      //   this.dom.classList.add('fixed-landmark-active')
+      //   this.dom.classList.remove('fixed-landmark-inactive')
+      // }else{
+      //   this.dom.classList.add('fixed-landmark-inactive')
+      //   this.dom.classList.remove('fixed-landmark-active')
+      // }
+    }
+  }, {
+    key: "update",
+    value: function update() {
+      var _this7 = this;
+
+      this.dom.style.width = this.target.rect().width + "px";
+      this.dom.style.height = this.target.rect().height + "px";
+      ['marginTop', 'marginBottom', 'marginLeft', 'marginRight'].forEach(function (attr) {
+        return _this7.dom.style[attr] = _this7.target.dom.style[attr];
+      });
+    }
+  }]);
+
+  return Landmark;
 }(Box);

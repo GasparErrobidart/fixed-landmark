@@ -131,20 +131,30 @@ class FixedElement extends Box{
       this.dom.style.width = this.dom.offsetWidth + 'px'
       this.position('fixed')
       this.positionMargins(this)
-      // this.dom.classList.remove("fixed-element-inactive")
-      // this.dom.classList.add("fixed-element-active")
     }else{
       this.position(this.defaultPosition)
       this.positionMargins(this.defaultPositionMargins)
       this.dom.style.width = this.defaultWidth
-      // this.dom.classList.remove("fixed-element-active")
-      // this.dom.classList.add("fixed-element-inactive")
     }
   }
 
 
+  addClasses(){
+    let limiter
+    clearTimeout(limiter)
+    limiter = setTimeout(()=>{
+      if(this.isFixed){
+        this.dom.classList.remove("fixed-element-inactive")
+        this.dom.classList.add("fixed-element-active")
+      }else{
+        this.dom.classList.remove("fixed-element-active")
+        this.dom.classList.add("fixed-element-inactive")
+      }
+    },5)
+  }
+
+
   update(ev){
-    console.log("COUNT")
     const rect        = this.rect()
     const landmarkR   = this.landmark.rect()
     const containerR  = this.container.rect()
@@ -159,9 +169,10 @@ class FixedElement extends Box{
     this.left += 'px'
     if(this.landmark.isEnabled != isFixed) {
       this.landmark.display(isFixed)
+      this.addClasses()
     }
     this.fix(isFixed)
-    
+
   }
 
 

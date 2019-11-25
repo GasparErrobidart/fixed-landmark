@@ -7,52 +7,23 @@ class Box{
       this.dom = element
     }
     if(!this.dom) console.error(`Element (${element}) wasn't found.`)
+    this.rect()
+    this.styles()
   }
 
   rect(){
-    return this.dom.getBoundingClientRect()
+    this.cachedRect = this.dom.getBoundingClientRect()
+    return this.cachedRect
   }
 
   styles(){
-    return this.dom.currentStyle || window.getComputedStyle(this.dom)
+    this.cachedStyles = this.dom.currentStyle || window.getComputedStyle(this.dom)
+    return this.cachedStyles
   }
 
-}
-
-
-class Landmark extends Box{
-
-  constructor(target){
-    super(document.createElement('div'))
-    this.target = target
-    this.parent = target.dom.parentNode
-    this.update()
-    this.dom.classList.add('fixed-landmark')
-    this.parent.insertBefore(this.dom, this.target.dom)
-    this.isEnabled = false
-    this.display(false)
-  }
-
-  display(value){
-    const height          = this.target.rect().height
-    this.isEnabled        = value
-    if(this.isEnabled){
-      this.dom.classList.add('fixed-landmark-active')
-      this.dom.classList.remove('fixed-landmark-inactive')
-    }else{
-      this.dom.classList.add('fixed-landmark-inactive')
-      this.dom.classList.remove('fixed-landmark-active')
-    }
-    this.dom.style.height = value ? height+'px' : '0px'
-  }
-
-  update(){
-    this.dom.style.width  = `${this.target.rect().width}px`;
-    this.dom.style.height = `${this.target.rect().height}px`;
-    ['marginTop','marginBottom','marginLeft','marginRight']
-      .forEach(
-        attr=> this.dom.style[attr] = this.target.dom.style[attr]
-      )
+  inView(){
+    const rect = this.rect()
+    return rect.bottom >= 0
   }
 
 }
@@ -86,16 +57,44 @@ class FixedElement extends Box{
                                         bottom: this.styles().bottom,
                                         left  : this.styles().left
                                       }
-    window.addEventListener('scroll',this.update.bind(this))
-    window.addEventListener('resize',()=>{
-      this.reset()
-      this.update()
-    })
+    this.watchScroll()
+    this.watchResize()
     this.update()
   }
 
+
+  watchResize(){
+    this.resizeListener = window.addEventListener('resize',this.reset.bind(this))
+  }
+
+
+  stopWatchResize(){
+    window.removeEventListener('resize',this.resizeListener)
+  }
+
+
+  watchScroll(){
+    let limiter, limitCount = 0
+    this.scrollListener = window.addEventListener('scroll',()=>{
+      if(limitCount < 10) clearTimeout(limiter)
+      limitCount++
+      limiter = setTimeout(()=>{
+        this.update()
+        limitCount = 0
+      },5)
+    })
+  }
+
+
+  stopWatchScroll(){
+    window.removeEventListener('scroll',this.scrollListener)
+  }
+
+
   reset(){
     this.dom.removeAttribute('style')
+    this.update()
+    this.landmark.update()
   }
 
 
@@ -132,19 +131,20 @@ class FixedElement extends Box{
       this.dom.style.width = this.dom.offsetWidth + 'px'
       this.position('fixed')
       this.positionMargins(this)
-      this.dom.classList.remove("fixed-element-inactive")
-      this.dom.classList.add("fixed-element-active")
+      // this.dom.classList.remove("fixed-element-inactive")
+      // this.dom.classList.add("fixed-element-active")
     }else{
       this.position(this.defaultPosition)
       this.positionMargins(this.defaultPositionMargins)
       this.dom.style.width = this.defaultWidth
-      this.dom.classList.remove("fixed-element-active")
-      this.dom.classList.add("fixed-element-inactive")
+      // this.dom.classList.remove("fixed-element-active")
+      // this.dom.classList.add("fixed-element-inactive")
     }
   }
 
 
   update(ev){
+    console.log("COUNT")
     const rect        = this.rect()
     const landmarkR   = this.landmark.rect()
     const containerR  = this.container.rect()
@@ -157,9 +157,52 @@ class FixedElement extends Box{
     }
     this.top  += 'px'
     this.left += 'px'
-    if(this.landmark.isEnabled != isFixed) this.landmark.display(isFixed)
+    if(this.landmark.isEnabled != isFixed) {
+      this.landmark.display(isFixed)
+    }
     this.fix(isFixed)
+    
   }
 
+
+}
+
+
+
+class Landmark extends Box{
+
+  constructor(target){
+    super(document.createElement('div'))
+    this.target = target
+    this.parent = target.dom.parentNode
+    this.update()
+    this.dom.classList.add('fixed-landmark')
+    this.parent.insertBefore(this.dom, this.target.dom)
+    this.isEnabled = false
+    this.display(false)
+  }
+
+  display(value){
+    // const height          = this.target.rect().height
+    this.isEnabled        = value
+    // this.dom.style.height = value ? height+'px' : '0px'
+    this.dom.style.position = value ? 'relative' : 'absolute';
+    // if(this.isEnabled){
+    //   this.dom.classList.add('fixed-landmark-active')
+    //   this.dom.classList.remove('fixed-landmark-inactive')
+    // }else{
+    //   this.dom.classList.add('fixed-landmark-inactive')
+    //   this.dom.classList.remove('fixed-landmark-active')
+    // }
+  }
+
+  update(){
+    this.dom.style.width  = `${this.target.rect().width}px`;
+    this.dom.style.height = `${this.target.rect().height}px`;
+    ['marginTop','marginBottom','marginLeft','marginRight']
+      .forEach(
+        attr=> this.dom.style[attr] = this.target.dom.style[attr]
+      )
+  }
 
 }

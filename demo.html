@@ -16,6 +16,13 @@
       box-sizing:border-box;
       margin:100px 200px;
       background:#ddd;
+      background: repeating-linear-gradient(
+        45deg,
+        #606dbc,
+        #606dbc 10px,
+        #465298 10px,
+        #465298 20px
+      );
     }
     .make-this-fixed{
       background: #666;
@@ -71,9 +78,9 @@
   <script>
 
     window.addEventListener("load",function(){
-      new ScrollDirection({
-        target : window
-      });
+      // new ScrollDirection({
+      //   target : window
+      // });
 
       new FixedElement({
         element   : "#fixed-element-1",

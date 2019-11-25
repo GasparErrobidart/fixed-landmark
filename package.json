@@ -1,5 +1,5 @@
 {
-  "name": "@molecule-driver/fixed-landmark",
+  "name": "fixed-landmark",
   "version": "1.0.0",
   "description": "A library for fixing elements to a container within a container.",
   "main": "index.js",

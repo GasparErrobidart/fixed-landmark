@@ -69,7 +69,9 @@ var FixedElement = function (_Box2) {
         container = options.container,
         offsetValue = options.offsetValue,
         offsetElement = options.offsetElement,
-        offsetFunction = options.offsetFunction;
+        offsetFunction = options.offsetFunction,
+        _options$performanceP = options.performancePriority,
+        performancePriority = _options$performanceP === undefined ? true : _options$performanceP;
 
     var _this2 = _possibleConstructorReturn(this, (FixedElement.__proto__ || Object.getPrototypeOf(FixedElement)).call(this, element));
 
@@ -79,6 +81,7 @@ var FixedElement = function (_Box2) {
     _this2.offsetElement = offsetElement;
     _this2.offsetFunction = offsetFunction;
     _this2.isFixed = false;
+    _this2.performancePriority = performancePriority;
     _this2.defaultPosition = _this2.position();
     _this2.defaultWidth = _this2.styles().defaultWidth;
     _this2.defaultPositionMargins = {
@@ -111,6 +114,7 @@ var FixedElement = function (_Box2) {
       var limiter = void 0,
           limitCount = 0;
       this.scrollListener = window.addEventListener('scroll', function () {
+        if (!_this3.performancePriority) return _this3.update();
         if (limitCount < 10) clearTimeout(limiter);
         limitCount++;
         limiter = setTimeout(function () {
@@ -186,7 +190,7 @@ var FixedElement = function (_Box2) {
       limiter = setTimeout(function () {
         var right = _this5.isFixed ? 'active' : 'inactive';
         var wrong = !_this5.isFixed ? 'active' : 'inactive';
-        _this5.dom.className = _this5.dom.className.replace('fixed-element-' + wrong, '') + 'fixed-element-' + right;
+        _this5.dom.className = _this5.dom.className.replace('fixed-element-' + wrong, '') + ' fixed-element-' + right;
       }, 5);
     }
   }, {

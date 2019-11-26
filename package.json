@@ -1,6 +1,6 @@
 {
   "name": "fixed-landmark",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "A library for fixing elements to a container within a container.",
   "main": "index.js",
   "scripts": {

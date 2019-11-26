@@ -41,7 +41,14 @@ class Container extends Box{
 class FixedElement extends Box{
 
   constructor(options){
-    const {element, container, offsetValue, offsetElement, offsetFunction} = options
+    const {
+      element,
+      container,
+      offsetValue,
+      offsetElement,
+      offsetFunction,
+      performancePriority = true
+    } = options
     super(element)
     this.container                  = new Container(container)
     this.landmark                   = new Landmark(this)
@@ -49,6 +56,7 @@ class FixedElement extends Box{
     this.offsetElement              = offsetElement
     this.offsetFunction             = offsetFunction
     this.isFixed                    = false
+    this.performancePriority        = performancePriority
     this.defaultPosition            = this.position()
     this.defaultWidth               = this.styles().defaultWidth
     this.defaultPositionMargins     = {
@@ -76,6 +84,7 @@ class FixedElement extends Box{
   watchScroll(){
     let limiter, limitCount = 0
     this.scrollListener = window.addEventListener('scroll',()=>{
+      if(!this.performancePriority) return this.update()
       if(limitCount < 10) clearTimeout(limiter)
       limitCount++
       limiter = setTimeout(()=>{
@@ -145,7 +154,7 @@ class FixedElement extends Box{
     limiter = setTimeout(()=>{
       const right = this.isFixed  ? 'active' : 'inactive'
       const wrong = !this.isFixed ? 'active' : 'inactive'
-      this.dom.className = this.dom.className.replace('fixed-element-'+wrong, '') + 'fixed-element-'+right
+      this.dom.className = this.dom.className.replace('fixed-element-'+wrong, '') + ' fixed-element-'+right
     },5)
   }
 

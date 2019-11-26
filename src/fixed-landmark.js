@@ -143,13 +143,9 @@ class FixedElement extends Box{
     let limiter
     clearTimeout(limiter)
     limiter = setTimeout(()=>{
-      if(this.isFixed){
-        this.dom.classList.remove("fixed-element-inactive")
-        this.dom.classList.add("fixed-element-active")
-      }else{
-        this.dom.classList.remove("fixed-element-active")
-        this.dom.classList.add("fixed-element-inactive")
-      }
+      const right = this.isFixed  ? 'active' : 'inactive'
+      const wrong = !this.isFixed ? 'active' : 'inactive'
+      this.dom.className = this.dom.className.replace('fixed-element-'+wrong, '') + 'fixed-element-'+right
     },5)
   }
 

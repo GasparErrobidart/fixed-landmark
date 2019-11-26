@@ -184,13 +184,9 @@ var FixedElement = function (_Box2) {
       var limiter = void 0;
       clearTimeout(limiter);
       limiter = setTimeout(function () {
-        if (_this5.isFixed) {
-          _this5.dom.classList.remove("fixed-element-inactive");
-          _this5.dom.classList.add("fixed-element-active");
-        } else {
-          _this5.dom.classList.remove("fixed-element-active");
-          _this5.dom.classList.add("fixed-element-inactive");
-        }
+        var right = _this5.isFixed ? 'active' : 'inactive';
+        var wrong = !_this5.isFixed ? 'active' : 'inactive';
+        _this5.dom.className = _this5.dom.className.replace('fixed-element-' + wrong, '') + 'fixed-element-' + right;
       }, 5);
     }
   }, {

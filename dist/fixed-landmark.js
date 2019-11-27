@@ -190,7 +190,7 @@ var FixedElement = function (_Box2) {
       limiter = setTimeout(function () {
         var right = _this5.isFixed ? 'active' : 'inactive';
         var wrong = !_this5.isFixed ? 'active' : 'inactive';
-        _this5.dom.className = _this5.dom.className.replace('fixed-element-' + wrong, '') + ' fixed-element-' + right;
+        _this5.dom.className = _this5.dom.className.replace('fixed-element-' + wrong, '').replace('\s\s', ' ') + ' fixed-element-' + right;
       }, 5);
     }
   }, {

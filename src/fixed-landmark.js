@@ -154,7 +154,7 @@ class FixedElement extends Box{
     limiter = setTimeout(()=>{
       const right = this.isFixed  ? 'active' : 'inactive'
       const wrong = !this.isFixed ? 'active' : 'inactive'
-      this.dom.className = this.dom.className.replace('fixed-element-'+wrong, '') + ' fixed-element-'+right
+      this.dom.className = this.dom.className.replace('fixed-element-'+wrong, '').replace('\s\s',' ') + ' fixed-element-'+right
     },5)
   }
 

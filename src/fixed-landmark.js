@@ -154,7 +154,7 @@ class FixedElement extends Box{
     limiter = setTimeout(()=>{
       const right = this.isFixed  ? 'active' : 'inactive'
       const wrong = !this.isFixed ? 'active' : 'inactive'
-      this.dom.className = this.dom.className.replace('fixed-element-'+wrong, '').replace('\s\s',' ') + ' fixed-element-'+right
+      this.dom.className = this.dom.className.replace('fixed-element-'+wrong, '').replace(/\s\s/gi,' ') + ' fixed-element-'+right
     },5)
   }
 
@@ -173,6 +173,7 @@ class FixedElement extends Box{
     this.top  += 'px'
     this.left += 'px'
     if(this.landmark.isEnabled != isFixed) {
+      if(!isFixed) this.landmark.update()
       this.landmark.display(isFixed)
       this.addClasses()
     }
@@ -213,11 +214,12 @@ class Landmark extends Box{
   }
 
   update(){
+    const styles = this.target.styles()
     this.dom.style.width  = `${this.target.rect().width}px`;
     this.dom.style.height = `${this.target.rect().height}px`;
     ['marginTop','marginBottom','marginLeft','marginRight']
       .forEach(
-        attr=> this.dom.style[attr] = this.target.dom.style[attr]
+        attr=> this.dom.style[attr] = styles[attr]
       )
   }
 

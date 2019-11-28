@@ -190,7 +190,7 @@ var FixedElement = function (_Box2) {
       limiter = setTimeout(function () {
         var right = _this5.isFixed ? 'active' : 'inactive';
         var wrong = !_this5.isFixed ? 'active' : 'inactive';
-        _this5.dom.className = _this5.dom.className.replace('fixed-element-' + wrong, '').replace('\s\s', ' ') + ' fixed-element-' + right;
+        _this5.dom.className = _this5.dom.className.replace('fixed-element-' + wrong, '').replace(/\s\s/gi, ' ') + ' fixed-element-' + right;
       }, 5);
     }
   }, {
@@ -209,6 +209,7 @@ var FixedElement = function (_Box2) {
       this.top += 'px';
       this.left += 'px';
       if (this.landmark.isEnabled != isFixed) {
+        if (!isFixed) this.landmark.update();
         this.landmark.display(isFixed);
         this.addClasses();
       }
@@ -257,10 +258,11 @@ var Landmark = function (_Box3) {
     value: function update() {
       var _this7 = this;
 
+      var styles = this.target.styles();
       this.dom.style.width = this.target.rect().width + "px";
       this.dom.style.height = this.target.rect().height + "px";
       ['marginTop', 'marginBottom', 'marginLeft', 'marginRight'].forEach(function (attr) {
-        return _this7.dom.style[attr] = _this7.target.dom.style[attr];
+        return _this7.dom.style[attr] = styles[attr];
       });
     }
   }]);

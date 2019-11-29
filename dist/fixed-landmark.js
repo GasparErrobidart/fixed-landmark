@@ -42,6 +42,17 @@ var Box = function () {
       var rect = this.rect();
       return rect.bottom >= 0;
     }
+  }, {
+    key: "classReplace",
+    value: function classReplace(wrong, right) {
+      var _this = this;
+
+      var limiter = void 0;
+      clearTimeout(limiter);
+      limiter = setTimeout(function () {
+        _this.dom.className = _this.dom.className.replace(wrong, '').replace(/\s\s/gi, ' ') + ' ' + right;
+      }, 5);
+    }
   }]);
 
   return Box;
@@ -73,27 +84,27 @@ var FixedElement = function (_Box2) {
         _options$performanceP = options.performancePriority,
         performancePriority = _options$performanceP === undefined ? true : _options$performanceP;
 
-    var _this2 = _possibleConstructorReturn(this, (FixedElement.__proto__ || Object.getPrototypeOf(FixedElement)).call(this, element));
+    var _this3 = _possibleConstructorReturn(this, (FixedElement.__proto__ || Object.getPrototypeOf(FixedElement)).call(this, element));
 
-    _this2.container = new Container(container);
-    _this2.landmark = new Landmark(_this2);
-    _this2.offsetValue = offsetValue || 0;
-    _this2.offsetElement = offsetElement;
-    _this2.offsetFunction = offsetFunction;
-    _this2.isFixed = false;
-    _this2.performancePriority = performancePriority;
-    _this2.defaultPosition = _this2.position();
-    _this2.defaultWidth = _this2.styles().defaultWidth;
-    _this2.defaultPositionMargins = {
-      top: _this2.styles().top,
-      right: _this2.styles().right,
-      bottom: _this2.styles().bottom,
-      left: _this2.styles().left
+    _this3.container = new Container(container);
+    _this3.landmark = new Landmark(_this3);
+    _this3.offsetValue = offsetValue || 0;
+    _this3.offsetElement = offsetElement;
+    _this3.offsetFunction = offsetFunction;
+    _this3.isFixed = false;
+    _this3.performancePriority = performancePriority;
+    _this3.defaultPosition = _this3.position();
+    _this3.defaultWidth = _this3.styles().defaultWidth;
+    _this3.defaultPositionMargins = {
+      top: _this3.styles().top,
+      right: _this3.styles().right,
+      bottom: _this3.styles().bottom,
+      left: _this3.styles().left
     };
-    _this2.watchScroll();
-    _this2.watchResize();
-    _this2.update();
-    return _this2;
+    _this3.watchScroll();
+    _this3.watchResize();
+    _this3.update();
+    return _this3;
   }
 
   _createClass(FixedElement, [{
@@ -109,16 +120,16 @@ var FixedElement = function (_Box2) {
   }, {
     key: "watchScroll",
     value: function watchScroll() {
-      var _this3 = this;
+      var _this4 = this;
 
       var limiter = void 0,
           limitCount = 0;
       this.scrollListener = window.addEventListener('scroll', function () {
-        if (!_this3.performancePriority) return _this3.update();
+        if (!_this4.performancePriority) return _this4.update();
         if (limitCount < 10) clearTimeout(limiter);
         limitCount++;
         limiter = setTimeout(function () {
-          _this3.update();
+          _this4.update();
           limitCount = 0;
         }, 5);
       });
@@ -158,12 +169,12 @@ var FixedElement = function (_Box2) {
   }, {
     key: "positionMargins",
     value: function positionMargins() {
-      var _this4 = this;
+      var _this5 = this;
 
       var values = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
       ['top', 'right', 'bottom', 'left'].forEach(function (attr) {
-        return _this4.dom.style[attr] = values[attr] || 'auto';
+        return _this5.dom.style[attr] = values[attr] || 'auto';
       });
     }
   }, {
@@ -181,19 +192,6 @@ var FixedElement = function (_Box2) {
       }
     }
   }, {
-    key: "addClasses",
-    value: function addClasses() {
-      var _this5 = this;
-
-      var limiter = void 0;
-      clearTimeout(limiter);
-      limiter = setTimeout(function () {
-        var right = _this5.isFixed ? 'active' : 'inactive';
-        var wrong = !_this5.isFixed ? 'active' : 'inactive';
-        _this5.dom.className = _this5.dom.className.replace('fixed-element-' + wrong, '').replace(/\s\s/gi, ' ') + ' fixed-element-' + right;
-      }, 5);
-    }
-  }, {
     key: "update",
     value: function update(ev) {
       var rect = this.rect();
@@ -201,18 +199,35 @@ var FixedElement = function (_Box2) {
       var containerR = this.container.rect();
       var offset = this.offset();
       var isFixed = landmarkR.top <= 0 + offset;
+      var isAtContainerBottom = containerR.bottom <= rect.height + offset;
       this.top = offset;
       this.left = containerR.left;
-      if (containerR.bottom <= rect.height + offset) {
+
+      // IF AT CONTAINER BOTTOM STATE CHANGED
+      if (isAtContainerBottom != this.atContainerBottom) {
+        this.atContainerBottom = isAtContainerBottom;
+        var atContainerBottomRightState = isAtContainerBottom ? 'active' : 'inactive';
+        var atContainerBottomWrongState = !isAtContainerBottom ? 'active' : 'inactive';
+        this.classReplace('at-container-bottom-' + atContainerBottomWrongState, 'at-container-bottom-' + atContainerBottomRightState);
+      }
+
+      if (this.atContainerBottom) {
         this.top += containerR.bottom - rect.height - offset;
       }
+
       this.top += 'px';
       this.left += 'px';
+
+      // IF FIXED CHANGED
       if (this.landmark.isEnabled != isFixed) {
         if (!isFixed) this.landmark.update();
         this.landmark.display(isFixed);
-        this.addClasses();
+        // SET FIXED OR NOT CLASSES
+        var fixedRightState = isFixed ? 'active' : 'inactive';
+        var fixedWrongState = !isFixed ? 'active' : 'inactive';
+        this.classReplace('fixed-element-' + fixedWrongState, 'fixed-element-' + fixedRightState);
       }
+
       this.fix(isFixed);
     }
   }]);

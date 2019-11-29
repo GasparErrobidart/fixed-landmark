@@ -26,6 +26,16 @@ class Box{
     return rect.bottom >= 0
   }
 
+
+  classReplace(wrong,right){
+    let limiter
+    clearTimeout(limiter)
+    limiter = setTimeout(()=>{
+      this.dom.className = this.dom.className.replace(wrong, '').replace(/\s\s/gi,' ') + ' ' + right
+    },5)
+  }
+
+
 }
 
 
@@ -148,15 +158,6 @@ class FixedElement extends Box{
   }
 
 
-  addClasses(){
-    let limiter
-    clearTimeout(limiter)
-    limiter = setTimeout(()=>{
-      const right = this.isFixed  ? 'active' : 'inactive'
-      const wrong = !this.isFixed ? 'active' : 'inactive'
-      this.dom.className = this.dom.className.replace('fixed-element-'+wrong, '').replace(/\s\s/gi,' ') + ' fixed-element-'+right
-    },5)
-  }
 
 
   update(ev){
@@ -165,22 +166,38 @@ class FixedElement extends Box{
     const containerR  = this.container.rect()
     const offset      = this.offset()
     const isFixed     = landmarkR.top <= 0 + offset
+    const isAtContainerBottom = containerR.bottom <= rect.height + offset
     this.top          = offset
     this.left         = containerR.left
-    if(containerR.bottom <= rect.height + offset){
+
+    // IF AT CONTAINER BOTTOM STATE CHANGED
+    if(isAtContainerBottom != this.atContainerBottom){
+      this.atContainerBottom = isAtContainerBottom
+      const atContainerBottomRightState   =  isAtContainerBottom ? 'active' : 'inactive'
+      const atContainerBottomWrongState   = !isAtContainerBottom ? 'active' : 'inactive'
+      this.classReplace('at-container-bottom-'+atContainerBottomWrongState,'at-container-bottom-'+atContainerBottomRightState)
+    }
+
+    if(this.atContainerBottom){
       this.top += containerR.bottom - rect.height - offset
     }
+
     this.top  += 'px'
     this.left += 'px'
+
+    // IF FIXED CHANGED
     if(this.landmark.isEnabled != isFixed) {
       if(!isFixed) this.landmark.update()
       this.landmark.display(isFixed)
-      this.addClasses()
+      // SET FIXED OR NOT CLASSES
+      const fixedRightState   =  isFixed ? 'active' : 'inactive'
+      const fixedWrongState   = !isFixed ? 'active' : 'inactive'
+      this.classReplace('fixed-element-'+fixedWrongState,'fixed-element-'+fixedRightState)
     }
+
     this.fix(isFixed)
 
   }
-
 
 }
 

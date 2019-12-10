@@ -67,14 +67,7 @@ class FixedElement extends Box{
     this.offsetFunction             = offsetFunction
     this.isFixed                    = false
     this.performancePriority        = performancePriority
-    this.defaultPosition            = this.position()
-    this.defaultWidth               = this.styles().defaultWidth
-    this.defaultPositionMargins     = {
-                                        top   : this.styles().top,
-                                        right : this.styles().right,
-                                        bottom: this.styles().bottom,
-                                        left  : this.styles().left
-                                      }
+    this.reset()
     this.watchScroll()
     this.watchResize()
     this.update()
@@ -82,7 +75,15 @@ class FixedElement extends Box{
 
 
   watchResize(){
-    this.resizeListener = window.addEventListener('resize',this.reset.bind(this))
+    this.resizeListener = window.addEventListener('resize',()=>{
+      this.reset()
+      this.landmark.reset()
+      clearTimeout(this.resizeLimiter)
+      this.resizeLimiter = setTimeout(()=>{
+        this.update()
+        this.landmark.update()
+      },100)
+    })
   }
 
 
@@ -112,8 +113,14 @@ class FixedElement extends Box{
 
   reset(){
     this.dom.removeAttribute('style')
-    this.update()
-    this.landmark.update()
+    this.defaultPosition            = this.position()
+    this.defaultWidth               = this.styles().defaultWidth
+    this.defaultPositionMargins     = {
+                                        top   : this.styles().top,
+                                        right : this.styles().right,
+                                        bottom: this.styles().bottom,
+                                        left  : this.styles().left
+                                      }
   }
 
 
@@ -217,17 +224,12 @@ class Landmark extends Box{
   }
 
   display(value){
-    // const height          = this.target.rect().height
     this.isEnabled        = value
-    // this.dom.style.height = value ? height+'px' : '0px'
     this.dom.style.position = value ? 'relative' : 'absolute';
-    // if(this.isEnabled){
-    //   this.dom.classList.add('fixed-landmark-active')
-    //   this.dom.classList.remove('fixed-landmark-inactive')
-    // }else{
-    //   this.dom.classList.add('fixed-landmark-inactive')
-    //   this.dom.classList.remove('fixed-landmark-active')
-    // }
+  }
+
+  reset(){
+    this.dom.removeAttribute('style')
   }
 
   update(){

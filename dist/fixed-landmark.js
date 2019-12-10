@@ -93,14 +93,7 @@ var FixedElement = function (_Box2) {
     _this3.offsetFunction = offsetFunction;
     _this3.isFixed = false;
     _this3.performancePriority = performancePriority;
-    _this3.defaultPosition = _this3.position();
-    _this3.defaultWidth = _this3.styles().defaultWidth;
-    _this3.defaultPositionMargins = {
-      top: _this3.styles().top,
-      right: _this3.styles().right,
-      bottom: _this3.styles().bottom,
-      left: _this3.styles().left
-    };
+    _this3.reset();
     _this3.watchScroll();
     _this3.watchResize();
     _this3.update();
@@ -110,7 +103,17 @@ var FixedElement = function (_Box2) {
   _createClass(FixedElement, [{
     key: "watchResize",
     value: function watchResize() {
-      this.resizeListener = window.addEventListener('resize', this.reset.bind(this));
+      var _this4 = this;
+
+      this.resizeListener = window.addEventListener('resize', function () {
+        _this4.reset();
+        _this4.landmark.reset();
+        clearTimeout(_this4.resizeLimiter);
+        _this4.resizeLimiter = setTimeout(function () {
+          _this4.update();
+          _this4.landmark.update();
+        }, 100);
+      });
     }
   }, {
     key: "stopWatchResize",
@@ -120,16 +123,16 @@ var FixedElement = function (_Box2) {
   }, {
     key: "watchScroll",
     value: function watchScroll() {
-      var _this4 = this;
+      var _this5 = this;
 
       var limiter = void 0,
           limitCount = 0;
       this.scrollListener = window.addEventListener('scroll', function () {
-        if (!_this4.performancePriority) return _this4.update();
+        if (!_this5.performancePriority) return _this5.update();
         if (limitCount < 10) clearTimeout(limiter);
         limitCount++;
         limiter = setTimeout(function () {
-          _this4.update();
+          _this5.update();
           limitCount = 0;
         }, 5);
       });
@@ -143,8 +146,14 @@ var FixedElement = function (_Box2) {
     key: "reset",
     value: function reset() {
       this.dom.removeAttribute('style');
-      this.update();
-      this.landmark.update();
+      this.defaultPosition = this.position();
+      this.defaultWidth = this.styles().defaultWidth;
+      this.defaultPositionMargins = {
+        top: this.styles().top,
+        right: this.styles().right,
+        bottom: this.styles().bottom,
+        left: this.styles().left
+      };
     }
   }, {
     key: "offset",
@@ -169,12 +178,12 @@ var FixedElement = function (_Box2) {
   }, {
     key: "positionMargins",
     value: function positionMargins() {
-      var _this5 = this;
+      var _this6 = this;
 
       var values = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
       ['top', 'right', 'bottom', 'left'].forEach(function (attr) {
-        return _this5.dom.style[attr] = values[attr] || 'auto';
+        return _this6.dom.style[attr] = values[attr] || 'auto';
       });
     }
   }, {
@@ -241,43 +250,39 @@ var Landmark = function (_Box3) {
   function Landmark(target) {
     _classCallCheck(this, Landmark);
 
-    var _this6 = _possibleConstructorReturn(this, (Landmark.__proto__ || Object.getPrototypeOf(Landmark)).call(this, document.createElement('div')));
+    var _this7 = _possibleConstructorReturn(this, (Landmark.__proto__ || Object.getPrototypeOf(Landmark)).call(this, document.createElement('div')));
 
-    _this6.target = target;
-    _this6.parent = target.dom.parentNode;
-    _this6.update();
-    _this6.dom.classList.add('fixed-landmark');
-    _this6.parent.insertBefore(_this6.dom, _this6.target.dom);
-    _this6.isEnabled = false;
-    _this6.display(false);
-    return _this6;
+    _this7.target = target;
+    _this7.parent = target.dom.parentNode;
+    _this7.update();
+    _this7.dom.classList.add('fixed-landmark');
+    _this7.parent.insertBefore(_this7.dom, _this7.target.dom);
+    _this7.isEnabled = false;
+    _this7.display(false);
+    return _this7;
   }
 
   _createClass(Landmark, [{
     key: "display",
     value: function display(value) {
-      // const height          = this.target.rect().height
       this.isEnabled = value;
-      // this.dom.style.height = value ? height+'px' : '0px'
       this.dom.style.position = value ? 'relative' : 'absolute';
-      // if(this.isEnabled){
-      //   this.dom.classList.add('fixed-landmark-active')
-      //   this.dom.classList.remove('fixed-landmark-inactive')
-      // }else{
-      //   this.dom.classList.add('fixed-landmark-inactive')
-      //   this.dom.classList.remove('fixed-landmark-active')
-      // }
+    }
+  }, {
+    key: "reset",
+    value: function reset() {
+      this.dom.removeAttribute('style');
     }
   }, {
     key: "update",
     value: function update() {
-      var _this7 = this;
+      var _this8 = this;
 
       var styles = this.target.styles();
       this.dom.style.width = this.target.rect().width + "px";
       this.dom.style.height = this.target.rect().height + "px";
       ['marginTop', 'marginBottom', 'marginLeft', 'marginRight'].forEach(function (attr) {
-        return _this7.dom.style[attr] = styles[attr];
+        return _this8.dom.style[attr] = styles[attr];
       });
     }
   }]);

@@ -137,10 +137,25 @@ class FixedElement extends Box{
     const containerR  = this.container.rect()
     const offset      = this.offset()
     const isFixed     = landmarkR.top <= 0 + offset
-    const isAtContainerBottom = containerR.bottom <= 0 ||  containerR.bottom <= rect.bottom + offset
-    console.log(containerR.bottom, '<=', rect.bottom , '+', offset)
+    let isAtContainerBottom = containerR.bottom <= 0 ||  containerR.bottom <= rect.bottom + offset
     this.top          = offset
     this.left         = containerR.left
+
+    if(this.dockTo == 'bottom'){
+      console.log("FE:",rect.bottom,"Container:",containerR.bottom);
+    }
+
+    if(
+      isAtContainerBottom &&
+      this.dockTo &&
+      this.dockTo != 'none'
+    ){
+      if(this.dockTo == 'top' && rect[this.dockTo] > 0){
+        isAtContainerBottom = false;
+      }else if(this.dockTo == 'bottom' && containerR[this.dockTo] >=  window.innerHeight){
+        isAtContainerBottom = false;
+      }
+    }
 
     // IF AT CONTAINER BOTTOM STATE CHANGED
     if(isAtContainerBottom != this.atContainerBottom){

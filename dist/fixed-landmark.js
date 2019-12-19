@@ -10,7 +10,17 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+// =================================================================
+/** Class abstracting DOM elements for its manipulation. */
+// =================================================================
+
 var Box = function () {
+
+  /**
+   * Create a Box.
+   * @param {DOMElement} element
+   */
+
   function Box(element) {
     _classCallCheck(this, Box);
 
@@ -57,6 +67,10 @@ var Box = function () {
 
   return Box;
 }();
+// =================================================================
+/** Class abstracting DOM elements for its manipulation. */
+// =================================================================
+
 
 var Container = function (_Box) {
   _inherits(Container, _Box);
@@ -64,14 +78,76 @@ var Container = function (_Box) {
   function Container(element) {
     _classCallCheck(this, Container);
 
-    return _possibleConstructorReturn(this, (Container.__proto__ || Object.getPrototypeOf(Container)).call(this, element));
+    var _this2 = _possibleConstructorReturn(this, (Container.__proto__ || Object.getPrototypeOf(Container)).call(this, element));
+
+    _this2.dom.style.position = 'relative';
+    return _this2;
   }
 
   return Container;
 }(Box);
+// =================================================================
+/** Class that adds a placeholder for fixed elements */
+// =================================================================
 
-var FixedElement = function (_Box2) {
-  _inherits(FixedElement, _Box2);
+
+var Landmark = function (_Box2) {
+  _inherits(Landmark, _Box2);
+
+  function Landmark(target) {
+    _classCallCheck(this, Landmark);
+
+    var _this3 = _possibleConstructorReturn(this, (Landmark.__proto__ || Object.getPrototypeOf(Landmark)).call(this, document.createElement('div')));
+
+    _this3.target = target;
+    _this3.parent = target.dom.parentNode;
+    _this3.update();
+    _this3.dom.classList.add('fixed-landmark');
+    // INSERT BEFORE
+    _this3.parent.insertBefore(_this3.dom, _this3.target.dom);
+    // INSERT AFTER
+    // this.parent.insertBefore(this.dom, this.target.dom.nextSibling)
+    _this3.isEnabled = false;
+    _this3.display(false);
+    return _this3;
+  }
+
+  _createClass(Landmark, [{
+    key: "display",
+    value: function display(value) {
+      this.isEnabled = value;
+      this.dom.style.position = value ? 'relative' : 'absolute';
+    }
+  }, {
+    key: "reset",
+    value: function reset() {
+      this.dom.removeAttribute('style');
+    }
+  }, {
+    key: "update",
+    value: function update() {
+      var _this4 = this;
+
+      var styles = this.target.styles();
+      this.dom.style.width = this.target.rect().width + "px";
+      this.dom.style.height = this.target.rect().height + "px";
+      ['marginTop', 'marginBottom', 'marginLeft', 'marginRight'].forEach(function (attr) {
+        return _this4.dom.style[attr] = styles[attr];
+      });
+    }
+  }]);
+
+  return Landmark;
+}(Box);
+
+// =================================================================
+/** Class that adds 'stickiness' behaviour to dom elements
+  * within a contaienr. */
+// =================================================================
+
+
+var FixedElement = function (_Box3) {
+  _inherits(FixedElement, _Box3);
 
   function FixedElement(options) {
     _classCallCheck(this, FixedElement);
@@ -81,37 +157,40 @@ var FixedElement = function (_Box2) {
         offsetValue = options.offsetValue,
         offsetElement = options.offsetElement,
         offsetFunction = options.offsetFunction,
+        _options$dockTo = options.dockTo,
+        dockTo = _options$dockTo === undefined ? 'top' : _options$dockTo,
         _options$performanceP = options.performancePriority,
         performancePriority = _options$performanceP === undefined ? true : _options$performanceP;
 
-    var _this3 = _possibleConstructorReturn(this, (FixedElement.__proto__ || Object.getPrototypeOf(FixedElement)).call(this, element));
+    var _this5 = _possibleConstructorReturn(this, (FixedElement.__proto__ || Object.getPrototypeOf(FixedElement)).call(this, element));
 
-    _this3.container = new Container(container);
-    _this3.landmark = new Landmark(_this3);
-    _this3.offsetValue = offsetValue || 0;
-    _this3.offsetElement = offsetElement;
-    _this3.offsetFunction = offsetFunction;
-    _this3.isFixed = false;
-    _this3.performancePriority = performancePriority;
-    _this3.reset();
-    _this3.watchScroll();
-    _this3.watchResize();
-    _this3.update();
-    return _this3;
+    _this5.container = new Container(container);
+    _this5.landmark = new Landmark(_this5);
+    _this5.offsetValue = offsetValue || 0;
+    _this5.offsetElement = offsetElement;
+    _this5.offsetFunction = offsetFunction;
+    _this5.isFixed = false;
+    _this5.performancePriority = performancePriority;
+    _this5.dockTo = dockTo;
+    _this5.reset();
+    _this5.watchScroll();
+    _this5.watchResize();
+    _this5.update();
+    return _this5;
   }
 
   _createClass(FixedElement, [{
     key: "watchResize",
     value: function watchResize() {
-      var _this4 = this;
+      var _this6 = this;
 
       this.resizeListener = window.addEventListener('resize', function () {
-        _this4.reset();
-        _this4.landmark.reset();
-        clearTimeout(_this4.resizeLimiter);
-        _this4.resizeLimiter = setTimeout(function () {
-          _this4.update();
-          _this4.landmark.update();
+        _this6.reset();
+        _this6.landmark.reset();
+        clearTimeout(_this6.resizeLimiter);
+        _this6.resizeLimiter = setTimeout(function () {
+          _this6.update();
+          _this6.landmark.update();
         }, 100);
       });
     }
@@ -123,16 +202,16 @@ var FixedElement = function (_Box2) {
   }, {
     key: "watchScroll",
     value: function watchScroll() {
-      var _this5 = this;
+      var _this7 = this;
 
       var limiter = void 0,
           limitCount = 0;
       this.scrollListener = window.addEventListener('scroll', function () {
-        if (!_this5.performancePriority) return _this5.update();
+        if (!_this7.performancePriority) return _this7.update();
         if (limitCount < 10) clearTimeout(limiter);
         limitCount++;
         limiter = setTimeout(function () {
-          _this5.update();
+          _this7.update();
           limitCount = 0;
         }, 5);
       });
@@ -178,12 +257,12 @@ var FixedElement = function (_Box2) {
   }, {
     key: "positionMargins",
     value: function positionMargins() {
-      var _this6 = this;
+      var _this8 = this;
 
       var values = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
       ['top', 'right', 'bottom', 'left'].forEach(function (attr) {
-        return _this6.dom.style[attr] = values[attr] || 'auto';
+        return _this8.dom.style[attr] = values[attr] || 'auto';
       });
     }
   }, {
@@ -192,11 +271,15 @@ var FixedElement = function (_Box2) {
       this.isFixed = value;
       if (this.isFixed) {
         this.dom.style.width = this.dom.offsetWidth + 'px';
-        this.position('fixed');
-        this.positionMargins(this);
+        if (this.dockTo && this.dockTo != 'none') {
+          this.position(this.atContainerBottom ? 'absolute' : 'fixed');
+          this.positionMargins(this);
+        }
       } else {
-        this.position(this.defaultPosition);
-        this.positionMargins(this.defaultPositionMargins);
+        if (this.dockTo && this.dockTo != 'none') {
+          this.position(this.defaultPosition);
+          this.positionMargins(this.defaultPositionMargins);
+        }
         this.dom.style.width = this.defaultWidth;
       }
     }
@@ -208,7 +291,8 @@ var FixedElement = function (_Box2) {
       var containerR = this.container.rect();
       var offset = this.offset();
       var isFixed = landmarkR.top <= 0 + offset;
-      var isAtContainerBottom = containerR.bottom <= rect.height + offset;
+      var isAtContainerBottom = containerR.bottom <= 0 || containerR.bottom <= rect.bottom + offset;
+      console.log(containerR.bottom, '<=', rect.bottom, '+', offset);
       this.top = offset;
       this.left = containerR.left;
 
@@ -220,9 +304,7 @@ var FixedElement = function (_Box2) {
         this.classReplace('at-container-bottom-' + atContainerBottomWrongState, 'at-container-bottom-' + atContainerBottomRightState);
       }
 
-      if (this.atContainerBottom) {
-        this.top += containerR.bottom - rect.height - offset;
-      }
+      if (isAtContainerBottom) this.top += containerR.height - rect.height - offset;
 
       this.top += 'px';
       this.left += 'px';
@@ -242,50 +324,4 @@ var FixedElement = function (_Box2) {
   }]);
 
   return FixedElement;
-}(Box);
-
-var Landmark = function (_Box3) {
-  _inherits(Landmark, _Box3);
-
-  function Landmark(target) {
-    _classCallCheck(this, Landmark);
-
-    var _this7 = _possibleConstructorReturn(this, (Landmark.__proto__ || Object.getPrototypeOf(Landmark)).call(this, document.createElement('div')));
-
-    _this7.target = target;
-    _this7.parent = target.dom.parentNode;
-    _this7.update();
-    _this7.dom.classList.add('fixed-landmark');
-    _this7.parent.insertBefore(_this7.dom, _this7.target.dom);
-    _this7.isEnabled = false;
-    _this7.display(false);
-    return _this7;
-  }
-
-  _createClass(Landmark, [{
-    key: "display",
-    value: function display(value) {
-      this.isEnabled = value;
-      this.dom.style.position = value ? 'relative' : 'absolute';
-    }
-  }, {
-    key: "reset",
-    value: function reset() {
-      this.dom.removeAttribute('style');
-    }
-  }, {
-    key: "update",
-    value: function update() {
-      var _this8 = this;
-
-      var styles = this.target.styles();
-      this.dom.style.width = this.target.rect().width + "px";
-      this.dom.style.height = this.target.rect().height + "px";
-      ['marginTop', 'marginBottom', 'marginLeft', 'marginRight'].forEach(function (attr) {
-        return _this8.dom.style[attr] = styles[attr];
-      });
-    }
-  }]);
-
-  return Landmark;
 }(Box);

@@ -1,11 +1,12 @@
 {
   "name": "fixed-landmark",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "description": "A library for fixing elements to a container within a container.",
   "main": "index.js",
   "scripts": {
-    "distribution": "npm run babelify && npm run minify",
-    "babelify": "babel src -d dist ",
+    "distribution": "npm run concat && npm run babelify && npm run minify",
+    "concat" : "node concat --files \"src/box.js,src/container.js,src/landmark.js,src/fixed-element.js\" --output \"fixed-landmark.js\"",
+    "babelify": "babel bundle -d dist ",
     "minify": "node minify"
   },
   "repository": {

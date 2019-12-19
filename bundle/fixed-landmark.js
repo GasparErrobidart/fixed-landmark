@@ -1,4 +1,13 @@
+// =================================================================
+/** Class abstracting DOM elements for its manipulation. */
+// =================================================================
+
 class Box{
+
+  /**
+   * Create a Box.
+   * @param {DOMElement} element
+   */
 
   constructor(element){
     if(typeof element == "string"){
@@ -37,15 +46,66 @@ class Box{
 
 
 }
+// =================================================================
+/** Class abstracting DOM elements for its manipulation. */
+// =================================================================
+
 
 
 class Container extends Box{
 
   constructor(element){
     super(element)
+    this.dom.style.position = 'relative'
   }
 
 }
+// =================================================================
+/** Class that adds a placeholder for fixed elements */
+// =================================================================
+
+
+class Landmark extends Box{
+
+  constructor(target){
+    super(document.createElement('div'))
+    this.target = target
+    this.parent = target.dom.parentNode
+    this.update()
+    this.dom.classList.add('fixed-landmark')
+    // INSERT BEFORE
+    this.parent.insertBefore(this.dom, this.target.dom)
+    // INSERT AFTER
+    // this.parent.insertBefore(this.dom, this.target.dom.nextSibling)
+    this.isEnabled = false
+    this.display(false)
+  }
+
+  display(value){
+    this.isEnabled        = value
+    this.dom.style.position = value ? 'relative' : 'absolute';
+  }
+
+  reset(){
+    this.dom.removeAttribute('style')
+  }
+
+  update(){
+    const styles = this.target.styles()
+    this.dom.style.width  = `${this.target.rect().width}px`;
+    this.dom.style.height = `${this.target.rect().height}px`;
+    ['marginTop','marginBottom','marginLeft','marginRight']
+      .forEach(
+        attr=> this.dom.style[attr] = styles[attr]
+      )
+  }
+
+}
+
+// =================================================================
+/** Class that adds 'stickiness' behaviour to dom elements
+  * within a contaienr. */
+// =================================================================
 
 
 class FixedElement extends Box{
@@ -57,16 +117,18 @@ class FixedElement extends Box{
       offsetValue,
       offsetElement,
       offsetFunction,
-      performancePriority = true
+      dockTo                 = 'top',
+      performancePriority    = true
     } = options
     super(element)
-    this.container                  = new Container(container)
-    this.landmark                   = new Landmark(this)
-    this.offsetValue                = offsetValue || 0
-    this.offsetElement              = offsetElement
-    this.offsetFunction             = offsetFunction
-    this.isFixed                    = false
-    this.performancePriority        = performancePriority
+    this.container           = new Container(container)
+    this.landmark            = new Landmark(this)
+    this.offsetValue         = offsetValue || 0
+    this.offsetElement       = offsetElement
+    this.offsetFunction      = offsetFunction
+    this.isFixed             = false
+    this.performancePriority = performancePriority
+    this.dockTo              = dockTo
     this.reset()
     this.watchScroll()
     this.watchResize()
@@ -151,15 +213,20 @@ class FixedElement extends Box{
   }
 
 
+
   fix(value){
     this.isFixed = value
     if(this.isFixed){
       this.dom.style.width = this.dom.offsetWidth + 'px'
-      this.position('fixed')
-      this.positionMargins(this)
+      if(this.dockTo && this.dockTo != 'none' ){
+        this.position( this.atContainerBottom ? 'absolute' : 'fixed')
+        this.positionMargins(this)
+      }
     }else{
-      this.position(this.defaultPosition)
-      this.positionMargins(this.defaultPositionMargins)
+      if(this.dockTo && this.dockTo != 'none'){
+        this.position(this.defaultPosition)
+        this.positionMargins(this.defaultPositionMargins)
+      }
       this.dom.style.width = this.defaultWidth
     }
   }
@@ -173,7 +240,8 @@ class FixedElement extends Box{
     const containerR  = this.container.rect()
     const offset      = this.offset()
     const isFixed     = landmarkR.top <= 0 + offset
-    const isAtContainerBottom = containerR.bottom <= rect.height + offset
+    const isAtContainerBottom = containerR.bottom <= 0 ||  containerR.bottom <= rect.bottom + offset
+    console.log(containerR.bottom, '<=', rect.bottom , '+', offset)
     this.top          = offset
     this.left         = containerR.left
 
@@ -183,11 +251,12 @@ class FixedElement extends Box{
       const atContainerBottomRightState   =  isAtContainerBottom ? 'active' : 'inactive'
       const atContainerBottomWrongState   = !isAtContainerBottom ? 'active' : 'inactive'
       this.classReplace('at-container-bottom-'+atContainerBottomWrongState,'at-container-bottom-'+atContainerBottomRightState)
+
     }
 
-    if(this.atContainerBottom){
-      this.top += containerR.bottom - rect.height - offset
-    }
+    if(isAtContainerBottom) this.top += containerR.height - rect.height - offset
+
+
 
     this.top  += 'px'
     this.left += 'px'
@@ -204,42 +273,6 @@ class FixedElement extends Box{
 
     this.fix(isFixed)
 
-  }
-
-}
-
-
-
-class Landmark extends Box{
-
-  constructor(target){
-    super(document.createElement('div'))
-    this.target = target
-    this.parent = target.dom.parentNode
-    this.update()
-    this.dom.classList.add('fixed-landmark')
-    this.parent.insertBefore(this.dom, this.target.dom)
-    this.isEnabled = false
-    this.display(false)
-  }
-
-  display(value){
-    this.isEnabled        = value
-    this.dom.style.position = value ? 'relative' : 'absolute';
-  }
-
-  reset(){
-    this.dom.removeAttribute('style')
-  }
-
-  update(){
-    const styles = this.target.styles()
-    this.dom.style.width  = `${this.target.rect().width}px`;
-    this.dom.style.height = `${this.target.rect().height}px`;
-    ['marginTop','marginBottom','marginLeft','marginRight']
-      .forEach(
-        attr=> this.dom.style[attr] = styles[attr]
-      )
   }
 
 }
